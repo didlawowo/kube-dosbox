@@ -68,7 +68,7 @@ type GameReconciler struct {
 //+kubebuilder:rbac:groups=operator.contrib.dosbox.com,resources=games,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=operator.contrib.dosbox.com,resources=games/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=operator.contrib.dosbox.com,resources=games/finalizers,verbs=update
-//+kubebuilder:rbac:groups="",resources=deployments,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="apps",resources=deployments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=configmaps;persistentvolumeclaims;services;pods,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -93,9 +93,9 @@ func (r *GameReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		return ctrl.Result{}, err
 	}
 
-	if game.Status.Ready == nil {
-		//_ = r.SetStatus(ctx, req, game, false)
-	}
+	//if game.Status.Ready == nil {
+	//	//_ = r.SetStatus(ctx, req, game, false)
+	//}
 
 	if !game.Spec.Deploy {
 		err := r.DeleteDeployment(ctx, req, game)
@@ -106,6 +106,11 @@ func (r *GameReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		_ = r.SetStatus(ctx, req, game, false)
 
 		return ctrl.Result{}, nil
+	}
+
+	_, err := r.CreateOrUpdatePersistentVolumeClaimAssets(ctx, req, game)
+	if err != nil {
+		return ctrl.Result{}, err
 	}
 
 	deployment, err := r.CreateOrUpdateDeployment(ctx, req, game)
